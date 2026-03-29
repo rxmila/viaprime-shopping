@@ -1,0 +1,128 @@
+# Query: page.tsx
+# ContextLines: 1
+
+'use client';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+
+export default function Home() {
+  const [produtos, setProdutos] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+
+  // Busca os produtos do Supabase assim que a página abre
+  useEffect(() => {
+    async function carregarProdutos() {
+      const { data, error } = await supabase
+        .from('produtos')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar produtos:', error);
+      } else {
+        setProdutos(data || []);
+      }
+      setCarregando(false);
+    }
+    carregarProdutos();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-50 font-sans">
+      {/* CABEÇALHO ESTILO MAGAZINE LUIZA */}
+      <header className="bg-blue-600 shadow-md sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-white italic tracking-tighter">
+              VIA PRIME <span className="text-yellow-400 font-light text-xl">SHOPPING</span>
+            </h1>
+          </div>
+          
+          <div className="w-full md:w-1/2 relative">
+            <input 
+              type="text" 
+              placeholder="Busque por produtos, serviços ou impermeabilizantes..." 
+              className="w-full p-3 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none text-gray-700 shadow-inner"
+            />
+            <button className="absolute right-3 top-3 text-gray-400">🔍</button>
+          </div>
+
+          <div className="flex items-center gap-6 text-white font-bold text-sm">
+            <div className="cursor-pointer hover:text-yellow-400 transition">Meus Pedidos</div>
+            <div className="cursor-pointer bg-blue-700 px-4 py-2 rounded-full flex items-center gap-2 hover:bg-blue-800">
+              🛒 <span className="hidden md:inline">Carrinho</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* BANNER DE BOAS VINDAS */}
+      <section className="bg-blue-700 py-12 text-center border-b-8 border-yellow-400">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-5xl font-black text-white mb-4 uppercase">
+            Qualidade Via Prime na sua casa
+          </h2>
+          <p className="text-blue-100 text-lg md:text-xl font-medium max-w-2xl mx-auto">
+            Transportes, serviços e os melhores produtos para sua obra com entrega garantida.
+          </p>
+        </div>
+      </section>
+
+      {/* GRADE DE PRODUTOS */}
+      <main className="container mx-auto px-4 py-12">
+        <h3 className="text-2xl font-black text-gray-800 mb-8 flex items-center gap-2">
+          <span className="w-2 h-8 bg-blue-600 rounded-full"></span>
+          Ofertas em Destaque
+        </h3>
+
+        {carregando ? (
+          <div className="text-center py-20 text-gray-500 font-bold italic">Carregando ofertas da Via Prime...</div>
+        ) : produtos.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-3xl shadow-inner text-gray-400">
+            Nenhum produto cadastrado no momento. 
+            <br /> <a href="/admin" className="text-blue-600 underline">Acesse o Painel Admin para cadastrar.</a>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {produtos.map((prod) => (
+              <div key={prod.id} className="bg-white rounded-3xl p-5 shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 group">
+                <div className="overflow-hidden rounded-2xl mb-4 aspect-square bg-gray-50 flex items-center justify-center">
+                  <img 
+                    src={prod.imagem_url || 'https://via.placeholder.com/300'} 
+                    alt={prod.nome}
+                    className="group-hover:scale-110 transition-transform duration-500 object-contain p-2"
+                  />
+                </div>
+                
+                <h4 className="text-gray-700 font-bold h-12 overflow-hidden leading-tight mb-2">
+                  {prod.nome}
+                </h4>
+                
+                <div className="flex flex-col mb-4">
+                  <span className="text-gray-400 text-xs line-through italic">De: R$ {(prod.preco * 1.2).toFixed(2)}</span>
+                  <span className="text-2xl font-black text-blue-600">R$ {prod.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  <span className="text-green-600 text-xs font-bold">No Pix com 5% de desconto</span>
+                </div>
+
+                <button 
+                  onClick={() => window.location.href = /checkout?id=${prod.id}}
+                  className="w-full bg-yellow-400 text-blue-900 py-3 rounded-2xl font-black uppercase tracking-wider hover:bg-yellow-500 transition-colors shadow-lg active:scale-95"
+                >
+                  Comprar Agora
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* RODAPÉ */}
+      <footer className="bg-gray-900 text-gray-400 py-12 mt-12 border-t-4 border-blue-600">
+        <div className="container mx-auto px-4 text-center">
+          <p className="font-bold text-white mb-2">VIA PRIME SHOPPING &copy; 2026</p>
+          <p className="text-sm">Parceria Lustrai & Rosi - Todos os direitos reservados.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
