@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
@@ -21,12 +21,12 @@ export async function POST(request: Request) {
           }
         ],
         shipments: {
-            cost: Number(shipping),
-            mode: "not_specified"
+          cost: Number(shipping),
+          mode: "not_specified"
         },
         back_urls: {
-          success: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://' + (process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : '')}/sucesso`,
-          failure: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://' + (process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : '')}/erro`,
+          success: `https://${process.env.VERCEL_URL}/sucesso`,
+          failure: `https://${process.env.VERCEL_URL}/erro`,
         },
         auto_return: 'approved',
       }),
@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     const data = await response.json();
     return NextResponse.json({ init_point: data.init_point });
   } catch (error) {
-    return NextResponse.json({ error: 'Erro ao criar checkout' }, { status: 500 });
+    console.error("Erro interno no Checkout:", error);
+    return NextResponse.json({ error: 'Erro interno no servidor' }, { status: 500 });
   }
 }
