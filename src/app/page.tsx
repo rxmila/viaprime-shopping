@@ -1,10 +1,9 @@
- "use client";
+"use client";
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 
-// Conexão com o Supabase usando as chaves que você enviou
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -19,9 +18,8 @@ export default function VitrineViaPrime() {
 
   useEffect(() => {
     async function carregarProdutos() {
-      const { data, error } = await supabase.from('produtos').select('*');
+      const { data } = await supabase.from('produtos').select('*');
       if (data) setProdutos(data);
-      if (error) console.error("Erro ao carregar produtos:", error);
     }
     carregarProdutos();
   }, []);
@@ -52,10 +50,10 @@ export default function VitrineViaPrime() {
       if (data.init_point) {
         window.location.href = data.init_point;
       } else {
-        alert("Erro: Verifique se o MP_ACCESS_TOKEN está correto na Vercel.");
+        alert("Erro: Verifique o Token do Mercado Pago na Vercel.");
       }
     } catch (error) {
-      alert("Erro de conexão com o servidor.");
+      alert("Erro de conexão.");
     } finally {
       setLoading(false);
     }
@@ -64,7 +62,7 @@ export default function VitrineViaPrime() {
   return (
     <main className="min-h-screen bg-gray-50 p-8 text-black">
       <header className="max-w-6xl mx-auto mb-12 text-center">
-        <h1 className="text-4xl font-black text-blue-900 tracking-tighter italic">VIA PRIME</h1>
+        <h1 className="text-4xl font-black text-blue-900 tracking-tighter">VIA PRIME</h1>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -75,54 +73,46 @@ export default function VitrineViaPrime() {
             onClick={() => setProdutoSelecionado(produto)}
           >
             <div className="relative h-72 w-full mb-4">
-              <Image src={produto.imagem_url} alt={produto.nome} fill className="object-contain rounded-xl" />
+              <Image 
+                src={produto.imagem_url} 
+                alt={produto.nome} 
+                fill 
+                className="object-contain rounded-xl"
+              />
             </div>
+            {/* AQUI ESTAVA O ERRO: O NOME E PRECO DEVEM FICAR DENTRO DA DIV ACIMA */}
             <h2 className="text-lg font-bold text-gray-800">{produto.nome}</h2>
-            <p className="text-2xl font-black text-green-600">R$ {produto.preco.toFixed(2)}</p>
+            <p className="text-2xl font-black text-green-600 mt-1">R$ {produto.preco.toFixed(2)}</p>
           </div>
         ))}
       </div>
 
       {produtoSelecionado && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl max-w-5xl w-full p-8 relative overflow-y-auto max-h-[95vh] shadow-2xl">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-8 relative shadow-2xl">
             <button 
               onClick={() => {setProdutoSelecionado(null); setFrete(null);}} 
-              className="absolute top-6 right-6 text-3xl font-light hover:text-red-500"
+              className="absolute top-4 right-4 text-2xl"
             >✕</button>
-            
-            <div className="flex flex-col md:flex-row gap-10">
-              <div className="flex-1 relative h-[450px] bg-gray-50 rounded-2xl">
-                <Image src={produtoSelecionado.imagem_url} alt={produtoSelecionado.nome} fill className="object-contain p-4" />
+            <h2 className="text-2xl font-bold mb-4">{produtoSelecionado.nome}</h2>
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Seu CEP" 
+                  className="border p-3 rounded-xl flex-1 text-black outline-none focus:border-blue-500"
+                  value={cep}
+                  onChange={(e) => setCep(e.target.value)}
+                />
+                <button onClick={calcularFrete} className="bg-gray-800 text-white px-4 rounded-xl font-bold">OK</button>
               </div>
-              
-              <div className="flex-1 space-y-6">
-                <h2 className="text-3xl font-bold text-gray-900">{produtoSelecionado.nome}</h2>
-                <p className="text-4xl font-black text-green-600">R$ {produtoSelecionado.preco.toFixed(2)}</p>
-                
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Seu CEP" 
-                      className="border border-gray-300 p-3 rounded-xl flex-1 text-black outline-none focus:ring-2 focus:ring-blue-500"
-                      value={cep}
-                      onChange={(e) => setCep(e.target.value)}
-                    />
-                    <button onClick={calcularFrete} className="bg-gray-800 text-white px-6 py-3 rounded-xl font-bold">OK</button>
-                  </div>
-                  {frete && <p className="text-green-700 font-bold text-sm">🚚 Frete: R$ {frete.toFixed(2)}</p>}
-                </div>
-
-                <button 
-                  onClick={handleFinalizarNoSite}
-                  disabled={loading}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white text-2xl font-black py-5 rounded-2xl shadow-lg transition-all active:scale-95 disabled:opacity-50"
-                >
-                  {loading ? "CONECTANDO..." : "FINALIZAR NO SITE"}
-                </button>
-                <p className="text-center text-xs text-gray-400 italic">Pagamento 100% seguro via Mercado Pago</p>
-              </div>
+              <button 
+                onClick={handleFinalizarNoSite}
+                disabled={loading}
+                className="w-full bg-green-500 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95"
+              >
+                {loading ? "CONECTANDO..." : "FINALIZAR PAGAMENTO"}
+              </button>
             </div>
           </div>
         </div>
