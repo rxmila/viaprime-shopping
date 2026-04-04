@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -15,56 +14,68 @@ export default function VitrineViaPrime() {
 
   useEffect(() => {
     async function carregarProdutos() {
-      setLoading(true);
-      const { data, error } = await supabase.from('products').select('*');
-      if (error) {
-        console.error("Erro ao buscar produtos:", error);
-      } else if (data) {
-        setProdutos(data);
-      }
+      const { data } = await supabase.from('products').select('*');
+      if (data) setProdutos(data);
       setLoading(false);
     }
     carregarProdutos();
   }, []);
 
+  const handleComprar = async (produto: any) => {
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: produto.name,
+          price: Number(produto.price),
+          quantity: 1
+        }),
+      });
+      
+      const data = await response.json();
+      if (data.init_point) {
+        window.location.href = data.init_point; // Abre o Mercado Pago
+      } else {
+        alert("Erro ao gerar pagamento. Verifique suas chaves na Vercel.");
+      }
+    } catch (error) {
+      alert("Erro de conexão com o servidor.");
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-white p-8">
-      <header className="flex justify-between items-center border-b pb-4 mb-8">
+    <main className="min-h-screen bg-white p-8 font-sans text-black">
+      <header className="flex justify-between items-center border-b pb-4 mb-8 max-w-6xl mx-auto">
         <h1 className="text-2xl font-bold text-blue-600">VIA PRIME</h1>
         <span className="text-xs text-gray-400 uppercase tracking-widest">Loja Oficial</span>
       </header>
 
-      {loading ? (
-        <p className="text-center text-gray-500">Carregando vitrine...</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {produtos.map((produto) => (
-            <div key={produto.id} className="border rounded-lg p-4 shadow-sm hover:shadow-md transition">
-              <div className="relative h-64 w-full mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        {produtos.map((produto) => (
+          <div key={produto.id} className="border rounded-lg p-4 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="relative h-64 w-full mb-4 bg-gray-50 rounded-md">
                 <img 
                   src={produto.image_url} 
                   alt={produto.name}
-                  className="object-contain w-full h-full"
+                  className="object-contain w-full h-full p-2"
                 />
               </div>
               <h2 className="font-semibold text-gray-800 mb-2">{produto.name}</h2>
               <p className="text-xl font-bold text-gray-900 mb-4">
                 R$ {Number(produto.price).toFixed(2).replace('.', ',')}
               </p>
-              <button className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition font-medium">
-                Comprar Agora
-              </button>
             </div>
-          ))}
-        </div>
-      )}
-      
-      <a 
-        href="https://wa.me/SEUNUMERO" 
-        className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition flex items-center gap-2"
-      >
-        <span>Falar com a Via Prime</span>
-      </a>
+            <button 
+              onClick={() => handleComprar(produto)}
+              className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition font-bold"
+            >
+              COMPRAR AGORA
+            </button>
+          </div>
+        ))}
+      </div>
     </main>
   );
 }
