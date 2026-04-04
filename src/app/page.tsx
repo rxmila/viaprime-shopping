@@ -18,7 +18,7 @@ export default function VitrineViaPrime() {
 
   useEffect(() => {
     async function carregarProdutos() {
-      const { data } = await supabase.from('produtos').select('*');
+      const { data } = await supabase.from('products').select('*');
       if (data) setProdutos(data);
     }
     carregarProdutos();
