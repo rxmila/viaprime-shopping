@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
     const productList = items.map((item: any) => ({
       id: item.id,
-      title: `${item.name} (${item.corSelecionada} - ${item.tamanhoSelecionado})`,
+      title: `${item.name} (${item.corSelecionada} - Tam: ${item.tamanhoSelecionado})`,
       unit_price: Number(item.price),
       quantity: 1,
       currency_id: 'BRL'
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         },
         auto_return: "approved",
         payment_methods: {
-          excluded_payment_types: [], // Deixa vazio para liberar o PIX
+          excluded_payment_types: [], // Mantém vazio para habilitar PIX
           installments: 12
         }
       },
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ init_point: result.init_point });
   } catch (error) {
-    console.error("Erro no Mercado Pago:", error);
-    return NextResponse.json({ error: 'Falha ao gerar link' }, { status: 500 });
+    console.error("Erro MP:", error);
+    return NextResponse.json({ error: 'Erro ao gerar link de pagamento' }, { status: 500 });
   }
 }
