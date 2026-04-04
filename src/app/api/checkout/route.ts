@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         },
         auto_return: "approved",
         payment_methods: {
-          excluded_payment_types: [], // Mantém vazio para habilitar PIX
+          excluded_payment_types: [], // Deixa vazio para liberar o PIX
           installments: 12
         }
       },
