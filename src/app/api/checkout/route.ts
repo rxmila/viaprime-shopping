@@ -1,41 +1,45 @@
  import { NextResponse } from 'next/server';
+import { MercadoPagoConfig, Preference } from 'mercadopago';
+
+const client = new MercadoPagoConfig({ 
+  accessToken: process.env.MP_ACCESS_TOKEN || '' 
+});
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { title, price, shipping } = body;
+    const { items } = await request.json();
 
-    const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        items: [
-          {
-            title: title,
-            unit_price: Number(price),
-            quantity: 1,
-            currency_id: 'BRL',
-          }
-        ],
-        shipments: {
-          cost: Number(shipping),
-          mode: "not_specified"
-        },
+    // Monta a lista de produtos para o Mercado Pago
+    const productList = items.map((item: any) => ({
+      id: item.id,
+      title: `${item.name} - Tam: ${item.tamanhoSelecionado}`,
+      unit_price: Number(item.price),
+      quantity: 1,
+      currency_id: 'BRL'
+    }));
+
+    const preference = new Preference(client);
+    const result = await preference.create({
+      body: {
+        items: productList,
+        // REDIRECIONAMENTO (Corrige o Erro 404)
         back_urls: {
-          success: `https://${process.env.VERCEL_URL}/sucesso`,
-          failure: `https://${process.env.VERCEL_URL}/erro`,
+          success: "https://viaprime-shopping.vercel.app/",
+          failure: "https://viaprime-shopping.vercel.app/",
+          pending: "https://viaprime-shopping.vercel.app/",
         },
-        auto_return: 'approved',
-      }),
+        auto_return: "approved",
+        // GARANTE QUE PIX ESTEJA ATIVO
+        payment_methods: {
+          installments: 12,
+          excluded_payment_types: [], // Vazio para aceitar TUDO (incluindo PIX)
+        }
+      },
     });
 
-    const data = await response.json();
-    return NextResponse.json({ init_point: data.init_point });
+    return NextResponse.json({ init_point: result.init_point });
   } catch (error) {
-    console.error("Erro interno no Checkout:", error);
-    return NextResponse.json({ error: 'Erro interno no servidor' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: 'Erro ao criar preferência' }, { status: 500 });
   }
 }
