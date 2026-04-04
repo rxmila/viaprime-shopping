@@ -11,8 +11,10 @@ const supabase = createClient(
 export default function VitrineViaPrime() {
   const [produtos, setProdutos] = useState<any[]>([]);
   const [selecionado, setSelecionado] = useState<any>(null);
-  const [cep, setCep] = useState('');
-  const [frete, setFrete] = useState<string | null>(null);
+  const [tamanho, setTamanho] = useState('');
+  const [cor, setCor] = useState('');
+  const [carrinho, setCarrinho] = useState<any[]>([]);
+  const [modalCarrinho, setModalCarrinho] = useState(false);
 
   useEffect(() => {
     async function carregar() {
@@ -22,78 +24,113 @@ export default function VitrineViaPrime() {
     carregar();
   }, []);
 
-  const handleComprar = async (produto: any) => {
+  const adicionarAoCarrinho = (produto: any) => {
+    if (!tamanho) return alert("Por favor, selecione um tamanho!");
+    setCarrinho([...carrinho, { ...produto, tamanhoSelecionado: tamanho, corSelecionada: cor || 'Padrão' }]);
+    setSelecionado(null);
+    setTamanho('');
+    setCor('');
+    setModalCarrinho(true);
+  };
+
+  const finalizarCompra = async () => {
     const response = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: produto.name,
-        price: Number(produto.price) + (frete ? 20.90 : 0), // Exemplo de frete somado
-        quantity: 1
-      }),
+      body: JSON.stringify({ items: carrinho }),
     });
     const data = await response.json();
     if (data.init_point) window.location.href = data.init_point;
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 md:p-8 text-black">
-      <header className="max-w-6xl mx-auto mb-10 flex justify-between items-center border-b pb-6">
-        <h1 className="text-3xl font-black text-blue-700 italic">VIA PRIME</h1>
-        <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">LOJA OFICIAL</div>
+    <main className="min-h-screen bg-gray-50 p-4 text-black font-sans">
+      {/* HEADER */}
+      <header className="max-w-6xl mx-auto mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div>
+          <h1 className="text-3xl font-black text-blue-700 italic leading-none">VIA PRIME</h1>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1">Authentic Footwear</p>
+        </div>
+        <button onClick={() => setModalCarrinho(true)} className="bg-blue-50 p-3 rounded-xl relative hover:bg-blue-100 transition">
+          <span className="text-xl">🛒</span>
+          {carrinho.length > 0 && (
+            <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">
+              {carrinho.length}
+            </span>
+          )}
+        </button>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+      {/* VITRINE */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
         {produtos.map((p) => (
-          <div key={p.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col cursor-pointer hover:shadow-md transition"
+          <div key={p.id} className="bg-white p-3 rounded-2xl border border-transparent hover:border-blue-500 transition-all cursor-pointer group shadow-sm" 
                onClick={() => setSelecionado(p)}>
-            <img src={p.image_url} alt={p.name} className="h-48 w-full object-contain mb-4" />
-            <h2 className="font-medium text-gray-700 h-12 overflow-hidden">{p.name}</h2>
-            <p className="text-2xl font-black mt-2">R$ {Number(p.price).toFixed(2)}</p>
-            <button className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg font-bold">VER DETALHES</button>
+            <div className="bg-gray-50 rounded-xl mb-3 overflow-hidden aspect-square flex items-center justify-center">
+               <img src={p.image_url} className="w-full h-full object-contain group-hover:scale-110 transition-transform p-2" />
+            </div>
+            <h2 className="text-xs font-bold text-gray-800 line-clamp-1">{p.name}</h2>
+            <p className="text-lg font-black text-blue-700 mt-1">R$ {Number(p.price).toFixed(2)}</p>
           </div>
         ))}
       </div>
 
-      {/* MODAL DE CHECKOUT INTERMEDIÁRIO */}
+      {/* MODAL DETALHES */}
       {selecionado && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
-            <button onClick={() => setSelecionado(null)} className="absolute top-4 right-4 text-2xl">✕</button>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <img src={selecionado.image_url} className="h-48 w-full object-contain mb-4" />
+            <h2 className="text-xl font-black mb-1">{selecionado.name}</h2>
+            <p className="text-xs text-gray-500 mb-6">{selecionado.description || 'Design exclusivo e conforto máximo para o seu dia a dia.'}</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <img src={selecionado.image_url} className="w-full h-64 object-contain bg-gray-50 rounded-xl" />
-              
+            <div className="space-y-4 mb-8">
               <div>
-                <h2 className="text-xl font-bold mb-2">{selecionado.name}</h2>
-                <p className="text-gray-500 text-sm mb-4">{selecionado.description || "Produto premium com acabamento exclusivo Via Prime."}</p>
-                
-                {/* VARIAÇÕES */}
-                <div className="mb-4">
-                  <label className="block text-xs font-bold text-gray-400 mb-2 uppercase">Escolha o Tamanho</label>
-                  <div className="flex gap-2">
-                    {['35', '36', '37', '38', '39'].map(t => (
-                      <button key={t} className="border w-10 h-10 rounded-md hover:border-blue-600 hover:text-blue-600 transition font-bold">{t}</button>
-                    ))}
-                  </div>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tamanho</label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {['34','35', '36', '37', '38', '39', '40'].map(t => (
+                    <button key={t} onClick={() => setTamanho(t)}
+                      className={`h-10 w-10 rounded-lg border-2 font-bold text-sm transition-all ${tamanho === t ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400'}`}>
+                      {t}
+                    </button>
+                  ))}
                 </div>
-
-                {/* CEP/FRETE */}
-                <div className="mb-6 bg-gray-50 p-3 rounded-lg border border-dashed border-gray-300">
-                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase">Calcular Frete</label>
-                  <div className="flex gap-2">
-                    <input type="text" placeholder="00000-000" className="border p-2 rounded flex-1 text-sm outline-none" 
-                           value={cep} onChange={(e) => setCep(e.target.value)} />
-                    <button onClick={() => setFrete("R$ 20,90")} className="bg-gray-800 text-white px-4 py-1 rounded text-sm">OK</button>
-                  </div>
-                  {frete && <p className="text-green-600 text-xs font-bold mt-2">✓ Frete: {frete} (Entrega em 4 dias)</p>}
-                </div>
-
-                <button onClick={() => handleComprar(selecionado)} className="w-full bg-green-500 hover:bg-green-600 text-white py-4 rounded-xl font-black text-lg shadow-lg transition-transform active:scale-95">
-                  FINALIZAR COMPRA
-                </button>
               </div>
             </div>
+
+            <button onClick={() => adicionarAoCarrinho(selecionado)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl hover:bg-blue-700 active:scale-95 transition-all">
+              ADICIONAR AO CARRINHO
+            </button>
+            <button onClick={() => setSelecionado(null)} className="w-full text-gray-400 font-bold mt-4 text-sm">Voltar</button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CARRINHO */}
+      {modalCarrinho && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 z-50">
+          <div className="bg-white rounded-t-3xl md:rounded-3xl max-w-md w-full p-8 shadow-2xl">
+            <h2 className="text-2xl font-black mb-6 flex items-center gap-2">🛒 Seu Carrinho</h2>
+            {carrinho.length === 0 ? (
+              <p className="text-gray-400 font-bold py-10 text-center">O carrinho está vazio.</p>
+            ) : (
+              <div className="space-y-4 mb-8 max-h-[40vh] overflow-y-auto pr-2">
+                {carrinho.map((item, i) => (
+                  <div key={i} className="flex gap-4 items-center bg-gray-50 p-3 rounded-2xl">
+                    <img src={item.image_url} className="w-16 h-16 object-contain" />
+                    <div className="flex-1">
+                      <p className="text-xs font-black leading-tight">{item.name}</p>
+                      <p className="text-[10px] font-bold text-blue-600">Tam: {item.tamanhoSelecionado}</p>
+                    </div>
+                    <p className="font-black text-sm">R$ {Number(item.price).toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button onClick={finalizarCompra} disabled={carrinho.length === 0} 
+                    className="w-full bg-green-500 text-white py-5 rounded-2xl font-black text-xl shadow-lg disabled:bg-gray-200 transition-all">
+              FINALIZAR PAGAMENTO
+            </button>
+            <button onClick={() => setModalCarrinho(false)} className="w-full text-gray-400 font-bold mt-6">Continuar comprando</button>
           </div>
         </div>
       )}
