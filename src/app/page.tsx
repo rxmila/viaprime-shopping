@@ -52,7 +52,7 @@ export default function VitrineViaPrime() {
           <h1 className="text-3xl font-black text-blue-700 italic leading-none">VIA PRIME</h1>
           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1">Loja Oficial</p>
         </div>
-        <button onClick={() => setModalCarrinho(true)} className="bg-blue-50 p-3 rounded-xl relative">
+        <button onClick={() => setModalCarrinho(true)} className="bg-blue-50 p-3 rounded-xl relative hover:bg-blue-100 transition">
           <span className="text-xl">🛒</span>
           {carrinho.length > 0 && (
             <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">
@@ -66,7 +66,7 @@ export default function VitrineViaPrime() {
         {produtos.map((p) => (
           <div key={p.id} className="bg-white p-3 rounded-2xl border border-transparent hover:border-blue-500 transition-all cursor-pointer shadow-sm group" onClick={() => setSelecionado(p)}>
             <div className="bg-gray-50 rounded-xl mb-3 aspect-square flex items-center justify-center overflow-hidden">
-               <img src={p.image_url} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
+               <img src={p.image_url} className="w-full h-full object-contain group-hover:scale-105 transition-transform p-2" />
             </div>
             <h2 className="text-xs font-bold text-gray-800 line-clamp-1">{p.name}</h2>
             <p className="text-lg font-black text-blue-700">R$ {Number(p.price).toFixed(2)}</p>
@@ -79,15 +79,16 @@ export default function VitrineViaPrime() {
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
             <button onClick={() => setSelecionado(null)} className="absolute top-4 right-4 text-gray-400">✕</button>
             <img src={selecionado.image_url} className="h-48 w-full object-contain mb-4" />
-            <h2 className="text-xl font-black mb-4">{selecionado.name}</h2>
+            <h2 className="text-xl font-black mb-1">{selecionado.name}</h2>
+            <p className="text-xs text-gray-500 mb-6">{selecionado.description || 'Acabamento premium e conforto exclusivo.'}</p>
             
-            <div className="space-y-6 mb-8">
+            <div className="space-y-6 mb-8 text-left">
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase">Tamanho</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tamanho</label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {['34', '35', '36', '37', '38', '39', '40'].map(t => (
                     <button key={t} onClick={() => setTamanho(t)}
-                      className={`h-10 w-10 rounded-lg border-2 font-bold text-sm transition-all ${tamanho === t ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-100 text-gray-400'}`}>
+                      className={`h-10 w-10 rounded-lg border-2 font-bold text-sm transition-all ${tamanho === t ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-gray-100 text-gray-400 hover:border-blue-200'}`}>
                       {t}
                     </button>
                   ))}
@@ -95,11 +96,11 @@ export default function VitrineViaPrime() {
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase">Cor</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cor Disponível</label>
                 <div className="flex gap-2 mt-2">
                   {['Preto', 'Branco', 'Bege', 'Nude'].map(c => (
                     <button key={c} onClick={() => setCor(c)}
-                      className={`px-4 py-2 rounded-lg border-2 font-bold text-xs transition-all ${cor === c ? 'bg-black border-black text-white' : 'bg-white border-gray-100 text-gray-400'}`}>
+                      className={`px-4 py-2 rounded-lg border-2 font-bold text-xs transition-all ${cor === c ? 'bg-black border-black text-white shadow-md' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}>
                       {c}
                     </button>
                   ))}
@@ -107,7 +108,7 @@ export default function VitrineViaPrime() {
               </div>
             </div>
 
-            <button onClick={() => adicionarAoCarrinho(selecionado)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-transform">
+            <button onClick={() => adicionarAoCarrinho(selecionado)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-transform hover:bg-blue-700">
               ADICIONAR AO CARRINHO
             </button>
           </div>
@@ -119,27 +120,27 @@ export default function VitrineViaPrime() {
           <div className="bg-white rounded-t-3xl md:rounded-3xl max-w-md w-full p-8 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-black">🛒 Carrinho</h2>
-              <button onClick={() => setModalCarrinho(false)}>✕</button>
+              <button onClick={() => setModalCarrinho(false)} className="text-gray-400 font-bold">FECHAR</button>
             </div>
             
             {carrinho.length === 0 ? (
-              <p className="text-center py-10 text-gray-400 font-bold">Seu carrinho está vazio.</p>
+              <p className="text-center py-10 text-gray-400 font-bold">O carrinho está vazio.</p>
             ) : (
               <>
-                <div className="space-y-4 mb-8 max-h-60 overflow-y-auto">
+                <div className="space-y-4 mb-8 max-h-60 overflow-y-auto pr-2">
                   {carrinho.map((item, i) => (
                     <div key={i} className="flex gap-4 items-center bg-gray-50 p-3 rounded-2xl">
                       <img src={item.image_url} className="w-12 h-12 object-contain" />
-                      <div className="flex-1 text-xs font-bold">
+                      <div className="flex-1 text-xs font-bold text-left">
                         <p className="line-clamp-1">{item.name}</p>
-                        <p className="text-blue-600">{item.corSelecionada} / Tam: {item.tamanhoSelecionado}</p>
+                        <p className="text-blue-600 uppercase text-[9px]">{item.corSelecionada} / TAM: {item.tamanhoSelecionado}</p>
                       </div>
                       <p className="font-black">R$ {Number(item.price).toFixed(2)}</p>
                     </div>
                   ))}
                 </div>
-                <button onClick={finalizarCompra} className="w-full bg-green-500 text-white py-5 rounded-2xl font-black text-xl shadow-lg">
-                  FINALIZAR PAGAMENTO
+                <button onClick={finalizarCompra} className="w-full bg-green-500 text-white py-5 rounded-2xl font-black text-xl shadow-lg hover:bg-green-600 transition-colors">
+                  PAGAR TUDO AGORA (PIX/CARTÃO)
                 </button>
               </>
             )}
