@@ -1,61 +1,47 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+export default function PaginaProduto({ params }: { params: { id: string } }) {
+  const [tamanho, setTamanho] = useState('');
+  const [cor, setCor] = useState('');
 
-export default function Home() {
-  const [produtos, setProdutos] = useState<any[]>([]);
-
-  useEffect(() => {
-    async function carregarProdutos() {
-      const { data } = await supabase.from('produtos').select('*');
-      if (data) setProdutos(data);
-    }
-    carregarProdutos();
-  }, []);
+  // Simulação de dados (Em breve vindo do Supabase)
+  const produto = {
+    nome: "Produto Selecionado",
+    preco: 239.90,
+    tamanhos: [34, 35, 36, 37, 38, 39, 40],
+    cores: ["Padrão", "Variante"],
+    descricao: "Detalhes premium com acabamento exclusivo ViaPrime."
+  };
 
   return (
-    <main className="min-h-screen bg-white p-4 md:p-12">
-      <div className="max-w-7xl mx-auto mb-12 text-center">
-        <h1 className="text-4xl font-black text-blue-900 uppercase tracking-tighter">
-          Via<span className="text-blue-600">Prime</span> Shopping
-        </h1>
-      </div>
+    <div className="max-w-6xl mx-auto p-6 md:p-12 bg-white min-h-screen">
+      <Link href="/" className="text-blue-600 font-bold mb-8 block">← Voltar para a loja</Link>
+      
+      <div className="grid md:grid-cols-2 gap-12">
+        <div className="bg-slate-100 rounded-2xl h-[500px] flex items-center justify-center text-slate-400">
+          [Imagem do Produto]
+        </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-        {produtos.map((item) => (
-          <div key={item.id} className="group relative bg-white border border-slate-100 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500">
-            
-            {/* O Link agora envolve o card todo */}
-            <Link href={`/produto/${item.id}`} className="cursor-pointer block">
-              <div className="relative h-96 w-full overflow-hidden">
-                <img 
-                  src={item.imagem_url || '/placeholder.jpg'} 
-                  alt={item.nome}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-              </div>
-
-              <div className="p-8">
-                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600">
-                  {item.nome}
-                </h3>
-                <p className="text-3xl font-black text-slate-900 mb-6">R$ {item.preco.toFixed(2)}</p>
-
-                <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-blue-700 transition-all shadow-xl shadow-blue-100">
-                  Ver Detalhes e Comprar
-                </button>
-              </div>
-            </Link>
+        <div className="flex flex-col gap-6">
+          <h1 className="text-3xl font-bold">{produto.nome}</h1>
+          <p className="text-4xl font-black text-blue-600">R$ {produto.preco.toFixed(2)}</p>
+          
+          <div className="space-y-4">
+            <p className="font-bold text-sm uppercase text-slate-500">Tamanho:</p>
+            <div className="flex flex-wrap gap-2">
+              {produto.tamanhos.map(t => (
+                <button key={t} onClick={() => setTamanho(t.toString())} className={`border p-3 rounded-md ${tamanho === t.toString() ? 'bg-blue-600 text-white' : ''}`}>{t}</button>
+              ))}
+            </div>
           </div>
-        ))}
+
+          <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold uppercase">Adicionar ao Carrinho</button>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
