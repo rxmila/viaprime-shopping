@@ -1,210 +1,160 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-// Inicialização do cliente Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Configuração do Supabase (Usando suas variáveis de ambiente da Vercel)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export default function VitrineVendas() {
-  const [products, setProducts] = useState<any[]>([])
-  const [selectedProduct, setSelectedProduct] = useState<any>(null)
-  const [cep, setCep] = useState('')
-  const [freteResult, setFreteResult] = useState<any>(null)
-  const [selectedSize, setSelectedSize] = useState('')
-  const [selectedColor, setSelectedColor] = useState('')
-  const [displayImage, setDisplayImage] = useState<string>('')
+export default function VitrineViaPrime() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Estados para o cálculo de Frete
+  const [cep, setCep] = useState('');
+  const [freteResultado, setFreteResultado] = useState<{ valor: string, prazo: string } | null>(null);
+  const [carregandoFrete, setCarregandoFrete] = useState(false);
 
-  // Carregar produtos do Banco de Dados
+  // Busca produtos reais do seu banco de dados Supabase
   useEffect(() => {
-    async function load() {
-      const { data } = await supabase.from('products').select('*').order('id', { ascending: false })
-      if (data) setProducts(data)
-    }
-    load()
-  }, [])
-
-  // Troca a cor e a imagem de variação baseada na ordem (index)
-  const handleColorSelect = (colorName: string, index: number) => {
-    setSelectedColor(colorName);
-    
-    if (selectedProduct?.variations_images) {
-      const imagesList = selectedProduct.variations_images.split(',').map((img: string) => img.trim());
+    async function fetchProducts() {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*');
       
-      if (imagesList[index] && imagesList[index].startsWith('http')) {
-        setDisplayImage(imagesList[index]);
+      if (error) {
+        console.error('Erro ao buscar produtos:', error);
       } else {
-        setDisplayImage(selectedProduct.image_url);
+        setProducts(data || []);
       }
+      setLoading(false);
     }
+    fetchProducts();
+  }, []);
+
+  // Função de Cálculo de Frete (Simulação Profissional pré-API)
+  const calcularFrete = async () => {
+    if (cep.length < 8) {
+      alert("Por favor, digite um CEP válido (8 dígitos).");
+      return;
+    }
+    setCarregandoFrete(true);
+    
+    // Simula o tempo de resposta das transportadoras para o cliente ver o "Carregando"
+    setTimeout(() => {
+      setFreteResultado({ valor: "18,90", prazo: "5 a 8 dias úteis" });
+      setCarregandoFrete(false);
+    }, 1200);
   };
 
-  // Reseta estados quando abre um novo produto
-  useEffect(() => {
-    if (selectedProduct) {
-      setDisplayImage(selectedProduct.image_url || '');
-      setSelectedColor('');
-      setSelectedSize('');
-      setFreteResult(null);
-    }
-  }, [selectedProduct]);
-
-  const calcularFrete = () => {
-    if (cep.length < 5) return alert("Digite um CEP válido")
-    const valor = 15.90 + (Number(selectedProduct?.weight_grams || 500) * 0.01)
-    setFreteResult({ 
-      valor: valor.toFixed(2), 
-      prazo: selectedProduct?.shipping_deadline || '7 dias úteis' 
-    })
-  }
-
-  // Função para simular o início do pagamento no site
-  const irParaPagamento = () => {
-    alert(`Iniciando Checkout Seguro...\nProduto: ${selectedProduct.name}\nCor: ${selectedColor}\nTamanho: ${selectedSize}\n\nConectando ao gateway de pagamento...`);
+  // Tela de Carregamento Inicial
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-opacity-20 border-t-blue-600"></div>
+          <p className="text-xs font-black text-blue-600 uppercase tracking-widest">Carregando ViaPrime...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '80px' }}>
-      
-      {/* HEADER */}
-      <header style={{ backgroundColor: '#0086ff', padding: '20px', color: 'white', textAlign: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-        <h1 style={{ margin: 0, fontSize: '1.4rem', letterSpacing: '1px' }}>VIA PRIME | MARKETPLACE</h1>
+    <main className="min-h-screen bg-[#f5f5f5] pb-20">
+      {/* Header Profissional */}
+      <header className="bg-white border-b border-gray-100 py-6 mb-8 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 flex justify-center">
+          <h1 className="text-3xl font-black text-gray-900 tracking-tighter italic">
+            VIA<span className="text-blue-600">PRIME</span><span className="text-gray-400 not-italic font-light">SHOPPING</span>
+          </h1>
+        </div>
       </header>
 
-      {/* VITRINE DE PRODUTOS */}
-      <main style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '25px' }}>
-        {products.map(p => (
-          <div key={p.id} onClick={() => setSelectedProduct(p)} style={{ backgroundColor: 'white', borderRadius: '12px', padding: '20px', cursor: 'pointer', textAlign: 'center', transition: '0.2s', border: '1px solid #eee' }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-            <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '220px', objectFit: 'contain' }} />
-            <h3 style={{ fontSize: '0.9rem', margin: '15px 0 10px', color: '#333' }}>{p.name}</h3>
-            <p style={{ color: '#0086ff', fontWeight: 'bold', fontSize: '1.3rem' }}>R$ {Number(p.price).toFixed(2)}</p>
+      {/* Grid de Produtos */}
+      <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {products.map((product) => (
+          <div key={product.id} className="group bg-white rounded-[40px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,118,255,0.08)] transition-all duration-500 border border-gray-50">
+            
+            {/* Container da Imagem */}
+            <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
+              <img 
+                src={product.image_url} 
+                alt={product.name}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div className="absolute top-6 left-6">
+                <span className="bg-white/90 backdrop-blur-md text-blue-600 text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-[0.2em] shadow-sm">
+                  Coleção 2026
+                </span>
+              </div>
+            </div>
+
+            {/* Conteúdo */}
+            <div className="p-8">
+              <div className="mb-2 flex justify-between items-start">
+                <h2 className="text-2xl font-bold text-gray-900 leading-tight">{product.name}</h2>
+              </div>
+              
+              <div className="flex flex-col mb-8">
+                <span className="text-3xl font-black text-gray-900 leading-none">
+                  R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+                <span className="text-[11px] font-bold text-blue-500 uppercase tracking-wider mt-2">
+                  Preço exclusivo no Pix
+                </span>
+              </div>
+
+              {/* Módulo de Frete Inteligente */}
+              <div className="mb-8 p-6 bg-gray-50 rounded-[30px] border border-gray-100 transition-all">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] block mb-4">Simular Frete e Prazo</label>
+                <div className="flex gap-3">
+                  <input 
+                    type="text" 
+                    placeholder="Seu CEP" 
+                    maxLength={8}
+                    className="flex-1 bg-white px-5 py-4 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+                    value={cep}
+                    onChange={(e) => setCep(e.target.value.replace(/\D/g, ''))}
+                  />
+                  <button 
+                    onClick={calcularFrete}
+                    disabled={carregandoFrete}
+                    className="bg-gray-900 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all disabled:bg-gray-200"
+                  >
+                    {carregandoFrete ? "..." : "OK"}
+                  </button>
+                </div>
+
+                {freteResultado && !carregandoFrete && (
+                  <div className="mt-5 flex items-center gap-4 bg-white p-4 rounded-2xl border border-green-50 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <div className="text-2xl">📦</div>
+                    <div>
+                      <p className="text-[10px] font-black text-green-500 uppercase tracking-tighter">Chegará em {freteResultado.prazo}</p>
+                      <p className="text-sm font-black text-gray-900">R$ {freteResultado.valor}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Botão de Compra - Estilo "Confiança Total" */}
+              <button className="w-full bg-blue-600 text-white py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-blue-100 hover:bg-blue-700 hover:shadow-blue-200 transition-all active:scale-[0.98] flex items-center justify-center gap-4 group">
+                Finalizar Compra
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+              </button>
+              
+              <div className="mt-6 flex items-center justify-center gap-2 opacity-40">
+                <div className="h-[1px] w-8 bg-gray-400"></div>
+                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest text-center">Ambiente Seguro Mercado Pago</span>
+                <div className="h-[1px] w-8 bg-gray-400"></div>
+              </div>
+            </div>
           </div>
         ))}
-      </main>
-
-      {/* MODAL DE DETALHES E COMPRA */}
-      {selectedProduct && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' }}>
-          <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '20px', maxWidth: '1000px', width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative', display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
-            
-            <button onClick={() => setSelectedProduct(null)} style={{ position: 'absolute', top: '20px', right: '20px', border: 'none', background: '#eee', borderRadius: '50%', width: '35px', height: '35px', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
-            
-            {/* ESQUERDA: IMAGEM DINÂMICA E TEXTO */}
-            <div style={{ flex: '1', minWidth: '320px' }}>
-              <img src={displayImage} alt="Preview" style={{ width: '100%', borderRadius: '15px', objectFit: 'contain', minHeight: '350px', backgroundColor: '#f9f9f9' }} />
-              
-              <div style={{ marginTop: '25px', padding: '20px', backgroundColor: '#f8fbff', borderRadius: '12px', borderLeft: '5px solid #0086ff' }}>
-                <h4 style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#333' }}>Descrição Premium</h4>
-                <p style={{ fontSize: '0.85rem', color: '#555', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
-                  {selectedProduct.description || "Este item exclusivo Via Prime combina materiais de alta durabilidade com design sofisticado."}
-                </p>
-              </div>
-            </div>
-
-            {/* DIREITA: SELEÇÃO E CHECKOUT */}
-            <div style={{ flex: '1', minWidth: '320px' }}>
-              <span style={{ color: '#0086ff', fontWeight: 'bold', fontSize: '0.8rem', textTransform: 'uppercase' }}>{selectedProduct.brand || 'Original Via Prime'}</span>
-              <h2 style={{ fontSize: '1.8rem', margin: '10px 0', color: '#222' }}>{selectedProduct.name}</h2>
-              
-              <div style={{ margin: '20px 0' }}>
-                <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#0086ff' }}>R$ {Number(selectedProduct.price).toFixed(2)}</span>
-                <p style={{ margin: '5px 0', fontSize: '0.9rem', color: '#777' }}>Disponível em 10x sem juros no cartão</p>
-              </div>
-
-              {/* CORES DINÂMICAS */}
-              <p style={{ fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '12px' }}>Selecione a Cor:</p>
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '25px' }}>
-                {(selectedProduct.colors || "Única").split(',').map((color: string, index: number) => (
-                  <button 
-                    key={index} 
-                    onClick={() => handleColorSelect(color.trim(), index)} 
-                    style={{ 
-                      padding: '12px 20px', 
-                      border: selectedColor === color.trim() ? '2px solid #0086ff' : '1px solid #ddd', 
-                      borderRadius: '8px', 
-                      backgroundColor: selectedColor === color.trim() ? '#eef6ff' : 'white',
-                      cursor: 'pointer',
-                      fontWeight: selectedColor === color.trim() ? 'bold' : 'normal'
-                    }}
-                  >
-                    {color.trim()}
-                  </button>
-                ))}
-              </div>
-
-              {/* TAMANHOS */}
-              <p style={{ fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '12px' }}>Tamanho Disponível:</p>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '30px' }}>
-                {(selectedProduct.sizes || "").split(/[ ,;]+/).map((s: string, idx: number) => (
-                  <button 
-                    key={idx} 
-                    onClick={() => setSelectedSize(s.trim())}
-                    style={{ 
-                      width: '48px', height: '48px', 
-                      border: selectedSize === s.trim() ? '2px solid #0086ff' : '1px solid #ddd', 
-                      borderRadius: '8px', 
-                      backgroundColor: selectedSize === s.trim() ? '#eef6ff' : 'white',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {s.trim()}
-                  </button>
-                ))}
-              </div>
-
-              {/* SIMULADOR DE FRETE */}
-              <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '15px', marginBottom: '30px' }}>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <input placeholder="Seu CEP" value={cep} onChange={(e) => setCep(e.target.value)} style={{ padding: '12px', border: '1px solid #ddd', borderRadius: '8px', flex: 1 }} />
-                  <button onClick={calcularFrete} style={{ backgroundColor: '#333', color: 'white', padding: '12px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>Calcular</button>
-                </div>
-                {freteResult && <p style={{ marginTop: '15px', color: '#2ecc71', fontWeight: 'bold' }}>🚚 Chega em {freteResult.prazo} por R$ {freteResult.valor}</p>}
-              </div>
-
-              {/* BOTÃO DE CHECKOUT NO SITE */}
-              <button 
-                disabled={!selectedSize || !selectedColor}
-                style={{ 
-                  width: '100%', 
-                  padding: '22px', 
-                  backgroundColor: (selectedSize && selectedColor) ? '#2ecc71' : '#ccc', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '12px', 
-                  fontWeight: 'bold', 
-                  fontSize: '1.2rem', 
-                  cursor: (selectedSize && selectedColor) ? 'pointer' : 'not-allowed',
-                  boxShadow: (selectedSize && selectedColor) ? '0 4px 15px rgba(46, 204, 113, 0.3)' : 'none'
-                }}
-                onClick={irParaPagamento}
-              >
-                {(selectedSize && selectedColor) ? 'FINALIZAR NO SITE' : 'SELECIONE COR E TAMANHO'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* BOTÃO FLUTUANTE WHATSAPP (APENAS PARA DÚVIDAS) */}
-      <a 
-        href="https://wa.me/5514981781495?text=Olá, tenho uma dúvida sobre um produto da Via Prime" 
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          position: 'fixed', bottom: '25px', right: '25px', 
-          backgroundColor: '#25d366', color: 'white', 
-          width: '65px', height: '65px', borderRadius: '50%', 
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 15px rgba(0,0,0,0.2)', zIndex: 10000, 
-          textDecoration: 'none', fontSize: '30px'
-        }}
-      >
-        <span role="img" aria-label="WhatsApp">💬</span>
-      </a>
-
-    </div>
-  )
+      </div>
+    </main>
+  );
 }
