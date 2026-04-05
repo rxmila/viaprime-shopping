@@ -1,7 +1,7 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // O Next.js gerencia o ESLint automaticamente. 
+  // Não precisamos de chaves extras aqui para o build básico.
 };
 
 export default nextConfig;

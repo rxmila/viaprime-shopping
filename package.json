@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/supabase-js": "^2.100.0",
     "autoprefixer": "^10.4.27",
@@ -18,15 +19,30 @@
     "postcss": "^8.5.8",
     "react": "19.2.4",
     "react-dom": "19.2.4"
+=======
+    "next": "14.2.15",
+    "react": "^18",
+    "react-dom": "^18",
+    "tailwindcss": "^3.4.1",
+    "postcss": "^8.4.31",
+    "autoprefixer": "^10.4.14",
+    "@supabase/supabase-js": "^2.48.1",
+    "mercadopago": "^2.1.0"
+>>>>>>> 651f0c5aa3650a91f8ea27e363ddb24dc284f73c
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "typescript": "^5",
     "@types/node": "^20",
+<<<<<<< HEAD
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4.2.2",
     "typescript": "^5"
+=======
+    "@types/react": "^18",
+    "@types/react-dom": "^18"
+>>>>>>> 651f0c5aa3650a91f8ea27e363ddb24dc284f73c
   }
 }
