@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    // Criando a preferência de venda
+    // Criando a preferência de venda no Mercado Pago
     const preference = new Preference(client);
 
     const result = await preference.create({
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
             currency_id: 'BRL',
           }
         ],
-        // Onde o cliente cai após pagar
+        // Onde o cliente cai após o pagamento
         back_urls: {
           success: 'https://viaprime-shopping.vercel.app',
           failure: 'https://viaprime-shopping.vercel.app',
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       }
     });
 
-    // Retorna o link para o checkout do Mercado Pago
+    // Retorna o link que abre o checkout seguro
     return NextResponse.json({ 
       id: result.id, 
       init_point: result.init_point 
