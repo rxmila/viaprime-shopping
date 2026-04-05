@@ -1,94 +1,61 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
 
-export default function PaginaProduto({ params }: { params: { id: string } }) {
-  const [tamanho, setTamanho] = useState('');
-  const [cor, setCor] = useState('');
-  const [quantidade, setQuantidade] = useState(1);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-  // Aqui simulamos o que viria do seu Supabase baseado no ID
-  const produto = {
-    nome: "Sandália Plataforma de Cunha Anabela",
-    preco: 239.90,
-    descricao: "Conforto e elegância para o seu dia a dia. Salto anabela macio com acabamento premium.",
-    tamanhos: [34, 35, 36, 37, 38, 39, 40],
-    cores: ["Caramelo", "Nude", "Preto"],
-    imagem: "/sandalia.jpg" // Use o caminho da sua imagem
-  };
+export default function Home() {
+  const [produtos, setProdutos] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function carregarProdutos() {
+      const { data } = await supabase.from('produtos').select('*');
+      if (data) setProdutos(data);
+    }
+    carregarProdutos();
+  }, []);
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8 grid md:grid-cols-2 gap-8 bg-white min-h-screen">
-      {/* Lado Esquerdo: Imagem */}
-      <div className="relative h-[400px] md:h-[600px] border rounded-xl overflow-hidden">
-        <Image 
-          src={produto.imagem} 
-          alt={produto.nome} 
-          fill 
-          style={{ objectFit: 'cover' }}
-        />
+    <main className="min-h-screen bg-white p-4 md:p-12">
+      <div className="max-w-7xl mx-auto mb-12 text-center">
+        <h1 className="text-4xl font-black text-blue-900 uppercase tracking-tighter">
+          Via<span className="text-blue-600">Prime</span> Shopping
+        </h1>
       </div>
 
-      {/* Lado Direito: Informações e Escolhas */}
-      <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-bold text-slate-800">{produto.nome}</h1>
-        <p className="text-4xl font-extrabold text-blue-600">R$ {produto.preco.toFixed(2)}</p>
-        
-        <div className="border-t border-b py-4">
-          <p className="text-slate-600 leading-relaxed">{produto.descricao}</p>
-        </div>
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+        {produtos.map((item) => (
+          <div key={item.id} className="group relative bg-white border border-slate-100 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500">
+            
+            {/* O Link agora envolve o card todo */}
+            <Link href={`/produto/${item.id}`} className="cursor-pointer block">
+              <div className="relative h-96 w-full overflow-hidden">
+                <img 
+                  src={item.imagem_url || '/placeholder.jpg'} 
+                  alt={item.nome}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+              </div>
 
-        {/* Seleção de Tamanho */}
-        <div>
-          <label className="block font-bold mb-2 uppercase text-xs text-slate-500">Selecione o Tamanho:</label>
-          <div className="flex flex-wrap gap-2">
-            {produto.tamanhos.map((t) => (
-              <button
-                key={t}
-                onClick={() => setTamanho(t.toString())}
-                className={`px-4 py-2 border rounded-md transition-all ${tamanho === t.toString() ? 'bg-blue-600 text-white border-blue-600' : 'bg-white hover:border-blue-600'}`}
-              >
-                {t}
-              </button>
-            ))}
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600">
+                  {item.nome}
+                </h3>
+                <p className="text-3xl font-black text-slate-900 mb-6">R$ {item.preco.toFixed(2)}</p>
+
+                <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-blue-700 transition-all shadow-xl shadow-blue-100">
+                  Ver Detalhes e Comprar
+                </button>
+              </div>
+            </Link>
           </div>
-        </div>
-
-        {/* Seleção de Cor */}
-        <div>
-          <label className="block font-bold mb-2 uppercase text-xs text-slate-500">Selecione a Cor:</label>
-          <div className="flex gap-2">
-            {produto.cores.map((c) => (
-              <button
-                key={c}
-                onClick={() => setCor(c)}
-                className={`px-4 py-2 border rounded-md transition-all ${cor === c ? 'bg-slate-800 text-white' : 'bg-white hover:border-slate-400'}`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Quantidade e Carrinho */}
-        <div className="flex items-center gap-4 mt-4">
-          <div className="flex items-center border rounded-lg overflow-hidden">
-            <button onClick={() => setQuantidade(q => Math.max(1, q - 1))} className="px-4 py-2 bg-slate-100">-</button>
-            <span className="px-6 font-bold">{quantidade}</span>
-            <button onClick={() => setQuantidade(q => q + 1)} className="px-4 py-2 bg-slate-100">+</button>
-          </div>
-          
-          <button 
-            className="flex-1 bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-colors uppercase tracking-widest text-sm"
-            onClick={() => alert(`Adicionado: ${produto.nome}, Tamanho ${tamanho}, Cor ${cor}`)}
-          >
-            Adicionar ao Carrinho 🛍️
-          </button>
-        </div>
-
-        <p className="text-center text-xs text-slate-400 mt-2">💳 Ambiente Seguro Mercado Pago</p>
+        ))}
       </div>
-    </div>
+    </main>
   );
 }
